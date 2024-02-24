@@ -21022,20 +21022,20 @@
   <h1>ECMAScript Language: Statements and Declarations</h1>
   <h2>Syntax</h2>
   <emu-grammar type="definition">
-    Statement[Yield, Await, Return] :
-      BlockStatement[?Yield, ?Await, ?Return]
+    Statement[Yield, Await] :
+      BlockStatement[?Yield, ?Await]
       VariableStatement[?Yield, ?Await]
       EmptyStatement
       ExpressionStatement[?Yield, ?Await]
-      IfStatement[?Yield, ?Await, ?Return]
-      BreakableStatement[?Yield, ?Await, ?Return]
+      IfStatement[?Yield, ?Await]
+      BreakableStatement[?Yield, ?Await]
       ContinueStatement[?Yield, ?Await]
       BreakStatement[?Yield, ?Await]
-      [+Return] ReturnStatement[?Yield, ?Await]
-      WithStatement[?Yield, ?Await, ?Return]
-      LabelledStatement[?Yield, ?Await, ?Return]
+      ReturnStatement[?Yield, ?Await]
+      WithStatement[?Yield, ?Await]
+      LabelledStatement[?Yield, ?Await]
       ThrowStatement[?Yield, ?Await]
-      TryStatement[?Yield, ?Await, ?Return]
+      TryStatement[?Yield, ?Await]
       DebuggerStatement
 
     Declaration[Yield, Await] :
@@ -21049,13 +21049,20 @@
       AsyncFunctionDeclaration[?Yield, ?Await, ?Default]
       AsyncGeneratorDeclaration[?Yield, ?Await, ?Default]
 
-    BreakableStatement[Yield, Await, Return] :
-      IterationStatement[?Yield, ?Await, ?Return]
-      SwitchStatement[?Yield, ?Await, ?Return]
+    BreakableStatement[Yield, Await] :
+      IterationStatement[?Yield, ?Await]
+      SwitchStatement[?Yield, ?Await]
   </emu-grammar>
 
   <emu-clause id="sec-statement-semantics">
     <h1>Statement Semantics</h1>
+
+    <emu-clause id="sec-statement-semantics-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>Statement : ReturnStatement</emu-grammar><emu-alg>
+        1. Return ~true~.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-statement-semantics-runtime-semantics-evaluation" type="sdo">
       <h1>Runtime Semantics: Evaluation</h1>
@@ -21090,20 +21097,27 @@
     <h1>Block</h1>
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      BlockStatement[Yield, Await, Return] :
-        Block[?Yield, ?Await, ?Return]
+      BlockStatement[Yield, Await] :
+        Block[?Yield, ?Await]
 
-      Block[Yield, Await, Return] :
-        `{` StatementList[?Yield, ?Await, ?Return]? `}`
+      Block[Yield, Await] :
+        `{` StatementList[?Yield, ?Await]? `}`
 
-      StatementList[Yield, Await, Return] :
-        StatementListItem[?Yield, ?Await, ?Return]
-        StatementList[?Yield, ?Await, ?Return] StatementListItem[?Yield, ?Await, ?Return]
+      StatementList[Yield, Await] :
+        StatementListItem[?Yield, ?Await]
+        StatementList[?Yield, ?Await,] StatementListItem[?Yield, ?Await]
 
-      StatementListItem[Yield, Await, Return] :
-        Statement[?Yield, ?Await, ?Return]
+      StatementListItem[Yield, Await] :
+        Statement[?Yield, ?Await]
         Declaration[?Yield, ?Await]
     </emu-grammar>
+
+    <emu-clause id="sec-block-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>StatementList : StatementList StatementListItem</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of StatementList is ~true~ and Matches Return of StatementListItem is ~true~, or ~false~ otherwise.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-block-static-semantics-early-errors">
       <h1>Static Semantics: Early Errors</h1>
@@ -21521,11 +21535,21 @@
     <h1>The `if` Statement</h1>
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      IfStatement[Yield, Await, Return] :
-        `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] `else` Statement[?Yield, ?Await, ?Return]
-        `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] [lookahead != `else`]
+      IfStatement[Yield, Await] :
+        `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await] `else` Statement[?Yield, ?Await]
+        `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await] [lookahead != `else`]
     </emu-grammar>
     <emu-note>The lookahead-restriction [lookahead ≠ `else`] resolves the classic "dangling else" problem in the usual way. That is, when the choice of associated `if` is otherwise ambiguous, the `else` is associated with the nearest (innermost) of the candidate `if`s</emu-note>
+
+    <emu-clause id="sec-if-statement-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>IfStatement : `if` `(` Expression `)` Statement `else` Statement</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of the first Statement is ~true~ and Matches Return of the second Statement is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>IfStatement : `if` `(` Expression `)` Statement [lookahead != `else`]</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of Statement is ~true~, or ~false~ otherwise.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-if-statement-static-semantics-early-errors">
       <h1>Static Semantics: Early Errors</h1>
@@ -21578,11 +21602,11 @@
     <h1>Iteration Statements</h1>
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      IterationStatement[Yield, Await, Return] :
-        DoWhileStatement[?Yield, ?Await, ?Return]
-        WhileStatement[?Yield, ?Await, ?Return]
-        ForStatement[?Yield, ?Await, ?Return]
-        ForInOfStatement[?Yield, ?Await, ?Return]
+      IterationStatement[Yield, Await] :
+        DoWhileStatement[?Yield, ?Await]
+        WhileStatement[?Yield, ?Await]
+        ForStatement[?Yield, ?Await
+        ForInOfStatement[?Yield, ?Await]
     </emu-grammar>
 
     <emu-clause id="sec-iteration-statements-semantics">
@@ -21640,9 +21664,16 @@
       <h1>The `do`-`while` Statement</h1>
       <h2>Syntax</h2>
       <emu-grammar type="definition">
-        DoWhileStatement[Yield, Await, Return] :
-          `do` Statement[?Yield, ?Await, ?Return] `while` `(` Expression[+In, ?Yield, ?Await] `)` `;`
+        DoWhileStatement[Yield, Await] :
+          `do` Statement[?Yield, ?Await] `while` `(` Expression[+In, ?Yield, ?Await] `)` `;`
       </emu-grammar>
+
+      <emu-clause id="sec-do-while-statement-static-semantics-calls-return">
+        <h1>Static Semantics: Matches Return</h1>
+        <emu-grammar>DoWhileStatement : `do` Statement `while` `(` Expression `)` `;`</emu-grammar><emu-alg>
+          1. Return ~true~ if Matches Return of Statement is ~true~, or ~false~ otherwise.
+        </emu-alg>
+      </emu-clause>
 
       <emu-clause id="sec-do-while-statement-static-semantics-early-errors">
         <h1>Static Semantics: Early Errors</h1>
@@ -21683,9 +21714,16 @@
       <h1>The `while` Statement</h1>
       <h2>Syntax</h2>
       <emu-grammar type="definition">
-        WhileStatement[Yield, Await, Return] :
-          `while` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+        WhileStatement[Yield, Await] :
+          `while` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
       </emu-grammar>
+
+      <emu-clause id="sec-while-statement-static-semantics-calls-return">
+        <h1>Static Semantics: Matches Return</h1>
+        <emu-grammar>WhileStatement : `while` `(` Expression `)` Statement</emu-grammar><emu-alg>
+          1. Return ~true~ if Matches Return of Statement is ~true~, or ~false~ otherwise.
+        </emu-alg>
+      </emu-clause>
 
       <emu-clause id="sec-while-statement-static-semantics-early-errors">
         <h1>Static Semantics: Early Errors</h1>
@@ -21726,11 +21764,23 @@
       <h1>The `for` Statement</h1>
       <h2>Syntax</h2>
       <emu-grammar type="definition">
-        ForStatement[Yield, Await, Return] :
-          `for` `(` [lookahead != `let` `[`] Expression[~In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` `var` VariableDeclarationList[~In, ?Yield, ?Await] `;` Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` LexicalDeclaration[~In, ?Yield, ?Await] Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await, ?Return]
+        ForStatement[Yield, Await] :
+          `for` `(` [lookahead != `let` `[`] Expression[~In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await]
+          `for` `(` `var` VariableDeclarationList[~In, ?Yield, ?Await] `;` Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await]
+          `for` `(` LexicalDeclaration[~In, ?Yield, ?Await] Expression[+In, ?Yield, ?Await]? `;` Expression[+In, ?Yield, ?Await]? `)` Statement[?Yield, ?Await]
       </emu-grammar>
+
+      <emu-clause id="sec-for-statement-static-semantics-calls-return">
+        <h1>Static Semantics: Matches Return</h1>
+        <emu-grammar>
+          ForStatement :
+            `for` `(` Expression? `;` Expression? `;` Expression? `)` Statement
+            `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
+            `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
+        </emu-grammar><emu-alg>
+          1. Return ~true~ if Matches Return of Statement is ~true~, or ~false~ otherwise.
+        </emu-alg>
+      </emu-clause>
 
       <emu-clause id="sec-for-statement-static-semantics-early-errors">
         <h1>Static Semantics: Early Errors</h1>
@@ -21863,16 +21913,16 @@
       <h1>The `for`-`in`, `for`-`of`, and `for`-`await`-`of` Statements</h1>
       <h2>Syntax</h2>
       <emu-grammar type="definition">
-        ForInOfStatement[Yield, Await, Return] :
-          `for` `(` [lookahead != `let` `[`] LeftHandSideExpression[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` `var` ForBinding[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` ForDeclaration[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` [lookahead &notin; { `let`, `async` `of` }] LeftHandSideExpression[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` `var` ForBinding[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          `for` `(` ForDeclaration[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          [+Await] `for` `await` `(` [lookahead != `let`] LeftHandSideExpression[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          [+Await] `for` `await` `(` `var` ForBinding[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
-          [+Await] `for` `await` `(` ForDeclaration[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+        ForInOfStatement[Yield, Await] :
+          `for` `(` [lookahead != `let` `[`] LeftHandSideExpression[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          `for` `(` `var` ForBinding[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          `for` `(` ForDeclaration[?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          `for` `(` [lookahead &notin; { `let`, `async` `of` }] LeftHandSideExpression[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          `for` `(` `var` ForBinding[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          `for` `(` ForDeclaration[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          [+Await] `for` `await` `(` [lookahead != `let`] LeftHandSideExpression[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          [+Await] `for` `await` `(` `var` ForBinding[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
+          [+Await] `for` `await` `(` ForDeclaration[?Yield, ?Await] `of` AssignmentExpression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
 
         ForDeclaration[Yield, Await] :
           LetOrConst ForBinding[?Yield, ?Await]
@@ -21884,6 +21934,24 @@
       <emu-note>
         <p>This section is extended by Annex <emu-xref href="#sec-initializers-in-forin-statement-heads"></emu-xref>.</p>
       </emu-note>
+
+      <emu-clause id="sec-for-in-and-for-of-statements-static-semantics-calls-return">
+        <h1>Static Semantics: Matches Return</h1>
+        <emu-grammar>
+          ForInOfStatement :
+            `for` `(` LeftHandSideExpression `in` Expression `)` Statement
+            `for` `(` `var` ForBinding `in` Expression `)` Statement
+            `for` `(` ForDeclaration `in` Expression `)` Statement
+            `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
+            `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+            `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+            `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
+            `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+            `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+        </emu-grammar><emu-alg>
+          1. Return ~true~ if Matches Return of Statement is ~true~, or ~false~ otherwise.
+        </emu-alg>
+      </emu-clause>
 
       <emu-clause id="sec-for-in-and-for-of-statements-static-semantics-early-errors">
         <h1>Static Semantics: Early Errors</h1>
@@ -22501,12 +22569,19 @@
 
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      WithStatement[Yield, Await, Return] :
-        `with` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+      WithStatement[Yield, Await] :
+        `with` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
     </emu-grammar>
     <emu-note>
       <p>The `with` statement adds an Object Environment Record for a computed object to the lexical environment of the running execution context. It then executes a statement using this augmented lexical environment. Finally, it restores the original lexical environment.</p>
     </emu-note>
+
+    <emu-clause id="sec-with-statement-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>WithStatement : `with` `(` Expression `)` Statement</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of Statement is ~true~, or ~false~ otherwise.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-with-statement-static-semantics-early-errors">
       <h1>Static Semantics: Early Errors</h1>
@@ -22547,23 +22622,42 @@
     <h1>The `switch` Statement</h1>
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      SwitchStatement[Yield, Await, Return] :
-        `switch` `(` Expression[+In, ?Yield, ?Await] `)` CaseBlock[?Yield, ?Await, ?Return]
+      SwitchStatement[Yield, Await] :
+        `switch` `(` Expression[+In, ?Yield, ?Await] `)` CaseBlock[?Yield, ?Await]
 
-      CaseBlock[Yield, Await, Return] :
-        `{` CaseClauses[?Yield, ?Await, ?Return]? `}`
-        `{` CaseClauses[?Yield, ?Await, ?Return]? DefaultClause[?Yield, ?Await, ?Return] CaseClauses[?Yield, ?Await, ?Return]? `}`
+      CaseBlock[Yield, Await] :
+        `{` CaseClauses[?Yield, ?Await]? `}`
+        `{` CaseClauses[?Yield, ?Await]? DefaultClause[?Yield, ?Await] CaseClauses[?Yield, ?Await]? `}`
 
-      CaseClauses[Yield, Await, Return] :
-        CaseClause[?Yield, ?Await, ?Return]
-        CaseClauses[?Yield, ?Await, ?Return] CaseClause[?Yield, ?Await, ?Return]
+      CaseClauses[Yield, Await] :
+        CaseClause[?Yield, ?Await]
+        CaseClauses[?Yield, ?Await] CaseClause[?Yield, ?Await]
 
-      CaseClause[Yield, Await, Return] :
-        `case` Expression[+In, ?Yield, ?Await] `:` StatementList[?Yield, ?Await, ?Return]?
+      CaseClause[Yield, Await] :
+        `case` Expression[+In, ?Yield, ?Await] `:` StatementList[?Yield, ?Await]?
 
-      DefaultClause[Yield, Await, Return] :
-        `default` `:` StatementList[?Yield, ?Await, ?Return]?
+      DefaultClause[Yield, Await] :
+        `default` `:` StatementList[?Yield, ?Await]?
     </emu-grammar>
+
+    <emu-clause id="sec-switch-statement-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>SwitchStatement : `switch` `(` Expression `)` CaseBlock</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of CaseBlock is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>CaseBlock : `{` CaseClauses? `}`</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of CaseClauses is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>CaseBlock : `{` CaseClauses? DefaultClause CaseClauses? `}`</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of first CaseClauses is ~true~, Matches Return of DefaultClause is ~true~, and Matches Return of second CaseClauses is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>CaseClauses : CaseClauses CaseClause</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of CaseClause is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>CaseClause : `case` Expression `:` StatementList?</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of StatementList is ~true~, or ~false~ otherwise.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-switch-statement-static-semantics-early-errors">
       <h1>Static Semantics: Early Errors</h1>
@@ -22707,16 +22801,23 @@
     <h1>Labelled Statements</h1>
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      LabelledStatement[Yield, Await, Return] :
-        LabelIdentifier[?Yield, ?Await] `:` LabelledItem[?Yield, ?Await, ?Return]
+      LabelledStatement[Yield, Await] :
+        LabelIdentifier[?Yield, ?Await] `:` LabelledItem[?Yield, ?Await]
 
-      LabelledItem[Yield, Await, Return] :
-        Statement[?Yield, ?Await, ?Return]
+      LabelledItem[Yield, Await] :
+        Statement[?Yield, ?Await]
         FunctionDeclaration[?Yield, ?Await, ~Default]
     </emu-grammar>
     <emu-note>
       <p>A |Statement| may be prefixed by a label. Labelled statements are only used in conjunction with labelled `break` and `continue` statements. ECMAScript has no `goto` statement. A |Statement| can be part of a |LabelledStatement|, which itself can be part of a |LabelledStatement|, and so on. The labels introduced this way are collectively referred to as the “current label set” when describing the semantics of individual statements.</p>
     </emu-note>
+
+    <emu-clause id="sec-labelled-statements-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>LabelledStatement : LabelIdentifier `:` LabelledItem</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of LabelledItem is ~true~, or ~false~ otherwise.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-labelled-statements-static-semantics-early-errors">
       <h1>Static Semantics: Early Errors</h1>
@@ -22845,17 +22946,17 @@
     <h1>The `try` Statement</h1>
     <h2>Syntax</h2>
     <emu-grammar type="definition">
-      TryStatement[Yield, Await, Return] :
-        `try` Block[?Yield, ?Await, ?Return] Catch[?Yield, ?Await, ?Return]
-        `try` Block[?Yield, ?Await, ?Return] Finally[?Yield, ?Await, ?Return]
-        `try` Block[?Yield, ?Await, ?Return] Catch[?Yield, ?Await, ?Return] Finally[?Yield, ?Await, ?Return]
+      TryStatement[Yield, Await] :
+        `try` Block[?Yield, ?Await] Catch[?Yield, ?Await]
+        `try` Block[?Yield, ?Await] Finally[?Yield, ?Await]
+        `try` Block[?Yield, ?Await] Catch[?Yield, ?Await] Finally[?Yield, ?Await]
 
-      Catch[Yield, Await, Return] :
-        `catch` `(` CatchParameter[?Yield, ?Await] `)` Block[?Yield, ?Await, ?Return]
-        `catch` Block[?Yield, ?Await, ?Return]
+      Catch[Yield, Await] :
+        `catch` `(` CatchParameter[?Yield, ?Await] `)` Block[?Yield, ?Await]
+        `catch` Block[?Yield, ?Await]
 
-      Finally[Yield, Await, Return] :
-        `finally` Block[?Yield, ?Await, ?Return]
+      Finally[Yield, Await] :
+        `finally` Block[?Yield, ?Await]
 
       CatchParameter[Yield, Await] :
         BindingIdentifier[?Yield, ?Await]
@@ -22864,6 +22965,24 @@
     <emu-note>
       <p>The `try` statement encloses a block of code in which an exceptional condition can occur, such as a runtime error or a `throw` statement. The `catch` clause provides the exception-handling code. When a catch clause catches an exception, its |CatchParameter| is bound to that exception.</p>
     </emu-note>
+
+    <emu-clause id="sec-try-statement-static-semantics-calls-return">
+      <h1>Static Semantics: Matches Return</h1>
+      <emu-grammar>
+        TryStatement : `try` Block Catch
+      </emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of Block is ~true~ and Matches Return of Catch is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>TryStatement : `try` Block Finally</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of Block is ~true~ and Matches Return of Finally is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>TryStatement : `try` Block Catch Finally</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of Block is ~true~ and Matches Return of Finally is ~true~, or ~false~ otherwise.
+      </emu-alg>
+      <emu-grammar>Catch : `catch` `(` CatchParameter `)` Block</emu-grammar><emu-alg>
+        1. Return ~true~ if Matches Return of Block is ~true~, or ~false~ otherwise.
+      </emu-alg>
+    </emu-clause>
 
     <emu-clause id="sec-try-statement-static-semantics-early-errors">
       <h1>Static Semantics: Early Errors</h1>
@@ -23286,7 +23405,7 @@
         FunctionStatementList[?Yield, ?Await]
 
       FunctionStatementList[Yield, Await] :
-        StatementList[?Yield, ?Await, +Return]?
+        StatementList[?Yield, ?Await]?
     </emu-grammar>
 
     <emu-clause id="sec-function-definitions-static-semantics-early-errors">
@@ -24284,7 +24403,7 @@
         ClassStaticBlockStatementList
 
       ClassStaticBlockStatementList :
-        StatementList[~Yield, +Await, ~Return]?
+        StatementList[~Yield, +Await]?
     </emu-grammar>
     <emu-note>
       <p>A class definition is always strict mode code.</p>
@@ -25707,7 +25826,7 @@
         ScriptBody?
 
       ScriptBody :
-        StatementList[~Yield, ~Await, ~Return]
+        StatementList[~Yield, ~Await]
     </emu-grammar>
 
     <emu-clause id="sec-scripts-static-semantics-early-errors">
@@ -25981,7 +26100,7 @@
       ModuleItem :
         ImportDeclaration
         ExportDeclaration
-        StatementListItem[~Yield, +Await, ~Return]
+        StatementListItem[~Yield, +Await]
 
       ModuleExportName :
         IdentifierName
@@ -50621,9 +50740,9 @@ THH:mm:ss.sss
       <h1>FunctionDeclarations in IfStatement Statement Clauses</h1>
       <p>The following augments the |IfStatement| production in <emu-xref href="#sec-if-statement"></emu-xref>:</p>
       <emu-grammar type="definition">
-        IfStatement[Yield, Await, Return] :
-          `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` Statement[?Yield, ?Await, ?Return]
-          `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return] `else` FunctionDeclaration[?Yield, ?Await, ~Default]
+        IfStatement[Yield, Await] :
+          `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` Statement[?Yield, ?Await]
+          `if` `(` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await] `else` FunctionDeclaration[?Yield, ?Await, ~Default]
           `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] `else` FunctionDeclaration[?Yield, ?Await, ~Default]
           `if` `(` Expression[+In, ?Yield, ?Await] `)` FunctionDeclaration[?Yield, ?Await, ~Default] [lookahead != `else`]
       </emu-grammar>
@@ -50663,8 +50782,8 @@ THH:mm:ss.sss
       <h1>Initializers in ForIn Statement Heads</h1>
       <p>The following augments the |ForInOfStatement| production in <emu-xref href="#sec-for-in-and-for-of-statements"></emu-xref>:</p>
       <emu-grammar type="definition">
-        ForInOfStatement[Yield, Await, Return] :
-          `for` `(` `var` BindingIdentifier[?Yield, ?Await] Initializer[~In, ?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await, ?Return]
+        ForInOfStatement[Yield, Await] :
+          `for` `(` `var` BindingIdentifier[?Yield, ?Await] Initializer[~In, ?Yield, ?Await] `in` Expression[+In, ?Yield, ?Await] `)` Statement[?Yield, ?Await]
       </emu-grammar>
       <p>This production only applies when parsing non-strict code.</p>
       <p>The static semantics of ContainsDuplicateLabels in <emu-xref href="#sec-static-semantics-containsduplicatelabels"></emu-xref> are augmented with the following:</p>
